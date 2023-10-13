@@ -1,0 +1,10 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <include file="changelog/001_initial_tables.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/002_create_auditlog_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/003_create_business_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/004_create_wema_account_table.sql" relativeToChangelogFile="true"/>
+</databaseChangeLog>
