@@ -7,6 +7,7 @@ import com.example.vestrapay.notifications.services.NotificationService;
 import com.example.vestrapay.roles_and_permissions.interfaces.IRoleService;
 import com.example.vestrapay.roles_and_permissions.repository.RolePermissionRepository;
 import com.example.vestrapay.settlements.interfaces.ISettlementService;
+import com.example.vestrapay.superadmin.dto.AdminUserDTO;
 import com.example.vestrapay.users.dtos.MerchantUserDTO;
 import com.example.vestrapay.users.dtos.UserDTO;
 import com.example.vestrapay.users.enums.UserType;
@@ -26,6 +27,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.example.vestrapay.utils.dtos.Constants.FAILED;
 import static com.example.vestrapay.utils.dtos.Constants.SUCCESSFUL;
@@ -44,6 +47,7 @@ public class UserService implements IUserService {
     private final IRoleService roleService;
     private final RolePermissionRepository rolePermissionRepository;
     private final ISettlementService settlementService;
+    ExecutorService executorService = Executors.newCachedThreadPool();
     @Override
     public Mono<Response<Void>> createAccount(UserDTO request) {
         return userRepository.findUserByEmail(request.getEmail())
@@ -74,13 +78,69 @@ public class UserService implements IUserService {
                                         .subject("OTP VERIFICATION")
                                         .body(otp)
                                         .build()).subscribe();
-                                settlementService.generateWemaAccountForMerchant(user1).subscribe();
+//                                settlementService.generateWemaAccountForMerchant(user1).subscribe();
                                 log.info("user successfully registered");
                                 roleService.createDefaultRole(user.getUuid(), user.getMerchantId(), "MERCHANT").subscribe();
                                 return Mono.just(Response.<Void>builder()
                                                 .statusCode(HttpStatus.CREATED.value())
                                                 .status(HttpStatus.CREATED)
                                                 .message(SUCCESSFUL)
+                                        .build());
+                            }).doOnError(throwable -> {
+                                log.error("error registering user. error is {}",throwable.getLocalizedMessage());
+                                throw new CustomException(Response.<Void>builder()
+                                        .message(FAILED)
+                                        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .errors(List.of(throwable.getLocalizedMessage(),throwable.getMessage(),throwable.getCause().toString()))
+                                        .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+                            });
+
+                })).doOnError(throwable -> {
+                    log.error("error creating account for user {}", throwable.getLocalizedMessage());
+                    throw new CustomException(Response.<Void>builder()
+                            .message(FAILED)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .errors(List.of("error creating account for user",throwable.getLocalizedMessage(),throwable.getMessage()))
+                            .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+                });
+    }
+
+    @Override
+    public Mono<Response<Void>> createAdminAccount(AdminUserDTO request) {
+        return userRepository.findUserByEmail(request.getEmail())
+                .flatMap(user -> {
+                    log.error("user already exists with email {}",request.getEmail());
+                    return Mono.just(Response.<Void>builder()
+                            .status(HttpStatus.CONFLICT)
+                            .errors(List.of("email already exists for ".concat(request.getEmail())))
+                            .statusCode(HttpStatus.CONFLICT.value())
+                            .message(FAILED)
+                            .build());
+                }).switchIfEmpty(Mono.defer(() -> {
+                    User user = modelMapper.map(request, User.class);
+                    user.setUuid(UUID.randomUUID().toString());
+                    user.setPassword(passwordEncoder.encode(request.getPassword()));
+                    user.setEnabled(true);
+                    user.setBusinessName("VESTRAPAY");
+                    user.setCountry(request.getCountry());
+                    user.setUserType(UserType.ADMIN);
+                    user.setMerchantId("VESTRAPAY");
+                    user.setKycCompleted(true);
+                    return userRepository.save(user)
+                            .flatMap(user1 -> {
+                                log.info("user successfully registered");
+                                executorService.submit(() -> notificationService.sendEmailAsync(EmailDTO.builder()
+                                                .body("Admin user credentials. Email "+user.getEmail()+ "\npassword: "+request.getPassword())
+                                                .subject("ADMIN CREATION")
+                                                .to(user.getEmail())
+                                        .build()));
+                                roleService.createDefaultRole(user.getUuid(), user.getMerchantId(), "ADMIN").subscribe();
+                                return Mono.just(Response.<Void>builder()
+                                        .statusCode(HttpStatus.CREATED.value())
+                                        .status(HttpStatus.CREATED)
+                                        .message(SUCCESSFUL)
                                         .build());
                             }).doOnError(throwable -> {
                                 log.error("error registering user. error is {}",throwable.getLocalizedMessage());

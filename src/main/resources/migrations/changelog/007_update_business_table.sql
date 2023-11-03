@@ -1,0 +1,1 @@
+ALTER TABLE business ADD settlement_time varchar(255);

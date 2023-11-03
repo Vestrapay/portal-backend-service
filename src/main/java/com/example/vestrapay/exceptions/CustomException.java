@@ -27,4 +27,7 @@ public class CustomException extends RuntimeException {
                 .build();
     }
 
+    public CustomException(Throwable cause) {
+        super(cause);
+    }
 }

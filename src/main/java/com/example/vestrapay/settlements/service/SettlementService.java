@@ -5,9 +5,12 @@ import com.example.vestrapay.audits.services.AuditLogService;
 import com.example.vestrapay.authentications.interfaces.IAuthenticationService;
 import com.example.vestrapay.exceptions.CustomException;
 import com.example.vestrapay.settlements.dtos.SettlementDTO;
+import com.example.vestrapay.settlements.enums.SettlementEnum;
 import com.example.vestrapay.settlements.interfaces.ISettlementService;
 import com.example.vestrapay.settlements.models.Settlement;
+import com.example.vestrapay.settlements.models.SettlementDurations;
 import com.example.vestrapay.settlements.models.WemaAccounts;
+import com.example.vestrapay.settlements.repository.SettlementDurationRepository;
 import com.example.vestrapay.settlements.repository.SettlementRepository;
 import com.example.vestrapay.settlements.repository.WemaAccountRepository;
 import com.example.vestrapay.users.enums.UserType;
@@ -22,6 +25,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +41,7 @@ public class SettlementService implements ISettlementService {
     private final ModelMapper modelMapper;
     private final AuditLogService auditLogService;
     private final WemaAccountRepository wemaAccountRepository;
+    private final SettlementDurationRepository settlementDurationRepository;
     @Value("${account.creation.prefix}")
     String wemaPrefix;
 
@@ -137,6 +143,7 @@ public class SettlementService implements ISettlementService {
                     String wemaAccountNumber = generateAccountNumber(merchant.getId());
                     WemaAccounts wemaAccount = WemaAccounts.builder()
                             .merchantId(merchant.getMerchantId())
+                            .accountName(merchant.getBusinessName())
                             .accountNumber(wemaAccountNumber)
                             .accountName(merchant.getFirstName().concat(" ").concat(merchant.getLastName()))
                             .uuid(UUID.randomUUID().toString())
@@ -520,6 +527,18 @@ public class SettlementService implements ISettlementService {
                     .build(), HttpStatus.INTERNAL_SERVER_ERROR);
         });
     }
+
+    @Override
+    public Mono<Response<List<SettlementEnum>>> settlementDurations() {
+
+        return Mono.just(Response.<List<SettlementEnum>>builder()
+                .data(new ArrayList<>(List.of(SettlementEnum.values())))
+                .message("Successful")
+                .statusCode(HttpStatus.OK.value())
+                .status(HttpStatus.OK)
+                .build()).cache(Duration.ofMinutes(3600));
+    }
+
 
     private String generateAccountNumber(Long id){
         try {

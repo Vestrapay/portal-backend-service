@@ -4,7 +4,9 @@ public enum PaymentTypeEnum {
     CARD("CARD"),
     PAYMENT_LINK("PAYMENT LINK"),
     TRANSFER("TRANSFER"),
-    NQR("NQR");
+    NQR("NQR"),
+    REFUND("REFUND"),
+    CHARGEBACK("CHARGEBACK");
 
     private final String description;
 

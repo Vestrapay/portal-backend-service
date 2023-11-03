@@ -52,14 +52,14 @@ public class UserController {
     }
 
     @PostMapping("merchant-create-user")
-    @PreAuthorize("hasRole('CREATE_USER')")
+//    @PreAuthorize("hasRole('CREATE_USER')")
     public Mono<ResponseEntity<Response<Void>>> merchantCreateUser(@RequestHeader String merchantId,@RequestBody @Valid MerchantUserDTO request){
         return userService.createMerchantUsers(merchantId,request)
                 .map(userResponse -> ResponseEntity.status(userResponse.getStatus()).body(userResponse));
     }
 
     @PostMapping("merchant-update-user")
-    @PreAuthorize("hasRole('UPDATE_USER')")
+//    @PreAuthorize("hasRole('UPDATE_USER')")
     public Mono<ResponseEntity<Response<User>>> merchantUpdateUser(@RequestHeader String merchantId,@RequestBody @Valid User request){
         return userService.updateMerchantUsers(merchantId,request)
                 .map(userResponse -> ResponseEntity.status(userResponse.getStatus()).body(userResponse));
@@ -73,14 +73,14 @@ public class UserController {
     }
 
     @GetMapping("view-all-merchant-users")
-    @PreAuthorize("hasRole('VIEW_USER')")
+//    @PreAuthorize("hasRole('VIEW_USER')")
     public Mono<ResponseEntity<Response<List<User>>>> merchantViewUsers(){
         return userService.merchantViewAllUsers()
                 .map(userResponse -> ResponseEntity.status(userResponse.getStatus()).body(userResponse));
     }
 
     @PostMapping("view-merchant-user")
-    @PreAuthorize("hasRole('VIEW_USER')")
+//    @PreAuthorize("hasRole('VIEW_USER')")
     public Mono<ResponseEntity<Response<?>>> merchantViewUser(@RequestHeader String merchantId,@RequestBody @Valid String userId){
         //todo coming soon
         return Mono.just(ResponseEntity.ok(null));

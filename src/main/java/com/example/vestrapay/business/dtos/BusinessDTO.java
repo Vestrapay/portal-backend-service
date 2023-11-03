@@ -1,5 +1,6 @@
 package com.example.vestrapay.business.dtos;
 
+import com.example.vestrapay.settlements.models.SettlementDurations;
 import lombok.*;
 
 @Getter
@@ -35,5 +36,6 @@ public class BusinessDTO {
 
     //payment methods
     private String paymentMethod; //list of payment methods coma separated
+    private SettlementDurations settlementTime;
 
 }

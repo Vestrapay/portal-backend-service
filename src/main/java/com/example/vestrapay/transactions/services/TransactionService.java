@@ -2,12 +2,16 @@ package com.example.vestrapay.transactions.services;
 
 import com.example.vestrapay.authentications.interfaces.IAuthenticationService;
 import com.example.vestrapay.exceptions.CustomException;
+import com.example.vestrapay.transactions.enums.PaymentTypeEnum;
 import com.example.vestrapay.transactions.interfaces.ITransactionService;
 import com.example.vestrapay.transactions.models.Transaction;
 import com.example.vestrapay.transactions.reporitory.TransactionRepository;
+import com.example.vestrapay.users.enums.UserType;
 import com.example.vestrapay.utils.dtos.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -52,7 +56,26 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public Mono<Response<List<Transaction>>> getTransactionsByParam(Map<String, Object> request) {
-        return null;
+        return authenticationService.getLoggedInUser()
+                .flatMap(user -> {
+                    if (request.isEmpty()){
+                        return transactionRepository.findByMerchantId(user.getMerchantId())
+                                .collectList()
+                                .flatMap(transactions -> {
+                                    return Mono.just(Response.<List<Transaction>>builder()
+                                                    .message(SUCCESSFUL)
+                                                    .data(transactions)
+                                                    .status(HttpStatus.OK)
+                                                    .statusCode(HttpStatus.OK.value())
+                                            .build());
+                                }).doOnError(throwable -> {
+                                    log.error("error fetching transactions. error is {}",throwable.getMessage());
+                                    throw new CustomException(throwable);
+                                });
+                    }
+                    return Mono.empty();
+
+                });
     }
 
     @Override
@@ -62,14 +85,70 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public Mono<Response<List<Transaction>>> adminGetAllTransactions(Map<String, Object> request) {
-        return null;
+        return authenticationService.getLoggedInUser()
+                .flatMap(user -> {
+                    if (user.getUserType().equals(UserType.SUPER_ADMIN)||user.getUserType().equals(UserType.ADMIN)){
+                        if (request.keySet().isEmpty()){
+                            return transactionRepository.findAll()
+                                    .collectList()
+                                    .flatMap(transactions -> {
+                                        return Mono.just(Response.<List<Transaction>>builder()
+                                                        .data(transactions)
+                                                        .message(SUCCESSFUL)
+                                                        .statusCode(HttpStatus.OK.value())
+                                                        .status(HttpStatus.OK)
+                                                .build());
+                                    });
+                        }
+                        else {
+                            Transaction transaction = new Transaction();
+                            for (String key: request.keySet()) {
+                                if (key.equals("id"))
+                                    transaction.setId((Long) request.get(key));
+                                if (key.equals("uuid"))
+                                    transaction.setUuid((String) request.get(key));
+                                if (key.equals("paymentType"))
+                                    transaction.setPaymentType((PaymentTypeEnum) request.get(key));
+                                if (key.equals("transactionReference"))
+                                    transaction.setTransactionReference((String) request.get(key));
+                                if (key.equals("transactionReference"))
+                                    transaction.setTransactionReference((String) request.get(key));
+                                if (key.equals("merchantId"))
+                                    transaction.setMerchantId((String) request.get(key));
+                                if (key.equals("userId"))
+                                    transaction.setUserId((String) request.get(key));
+                            }
+
+                            return transactionRepository.findAll(Example.of(transaction, ExampleMatcher.matchingAny()))
+                                    .collectList()
+                                    .flatMap(transactions -> {
+                                        return Mono.just(Response.<List<Transaction>>builder()
+                                                        .data(transactions)
+                                                        .status(HttpStatus.OK)
+                                                        .statusCode(HttpStatus.OK.value())
+                                                        .message(SUCCESSFUL)
+                                                .build());
+                                    });
+
+                        }
+
+                    }
+                    else {
+                        return Mono.just(Response.<List<Transaction>>builder()
+                                        .errors(List.of("Permission denied"))
+                                        .status(HttpStatus.UNAUTHORIZED)
+                                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                                        .message(FAILED)
+                                .build());
+                    }
+                });
     }
 
     @Override
     public Mono<Response<List<Transaction>>> getTop10TransactionForUser() {
         return authenticationService.getLoggedInUser()
                 .flatMap(user -> {
-                    return transactionRepository.findTop10(user.getUuid())
+                    return transactionRepository.findTop10(user.getMerchantId())
                             .collectList().flatMap(transactions -> {
                                 return Mono.just(Response.<List<Transaction>>builder()
                                                 .message(SUCCESSFUL)
@@ -108,7 +187,7 @@ public class TransactionService implements ITransactionService {
                     // Get the LocalDateTime for the beginning of the current day (12:00 AM)
                     LocalDateTime beginningOfDay = currentDateTime.toLocalDate().atTime(LocalTime.MIDNIGHT);
 
-                    return transactionRepository.findTransactionsByUserIdAndCreatedAtBetween(user.getUuid(),beginningOfDay ,LocalDateTime.now())
+                    return transactionRepository.findTransactionsByMerchantIdAndCreatedAtBetween(user.getMerchantId(),beginningOfDay ,LocalDateTime.now())
                             .collectList().flatMap(transactions -> {
                                 return Mono.just(Response.<List<Transaction>>builder()
                                         .message(SUCCESSFUL)

@@ -58,7 +58,7 @@ public class KeyService implements IKeyService {
                     }
 
                     keys.setKeyUsage(keyUsage);
-                    keys.setUserId(user.getUuid());
+                    keys.setUserId(user.getMerchantId());
 
                     return keysRepository.findByUserIdAndKeyUsage(user.getUuid(), keyUsage.name())
                             .flatMap(keys1 -> {

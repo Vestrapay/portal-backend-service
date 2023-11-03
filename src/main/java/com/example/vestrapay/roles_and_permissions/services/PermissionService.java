@@ -29,45 +29,26 @@ public class PermissionService implements IPermissionService
     private final PermissionRepository permissionRepository;
     @Override
     public Mono<Response<List<Permissions>>> getAllPermissions() {
-        return authenticationService.getLoggedInUser().flatMap(user -> {
-            log.info("logged in user gotten for getAllPermissions");
-            return permissionRepository.findAll().collectList()
-                    .flatMap(permissions -> {
-                        log.info("permissions gotten");
-                        return Mono.just(Response.<List<Permissions>>builder()
-                                        .data(permissions)
-                                        .message(SUCCESSFUL)
-                                        .status(HttpStatus.OK)
-                                        .statusCode(HttpStatus.OK.value())
-                                .build());
-                    })
-                    .doOnError(throwable -> {
-                        log.error("error fetching all permissions from db, error is {}",throwable.getLocalizedMessage());
-                        throw new CustomException(Response.builder()
-                                .message(FAILED)
-                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                                .errors(List.of("error fetching permissions from db",throwable.getLocalizedMessage()))
-                                .build(), HttpStatus.INTERNAL_SERVER_ERROR);                    });
-
-        }).switchIfEmpty(Mono.defer(() -> {
-            log.error("user not found");
-            return Mono.just(Response.<List<Permissions>>builder()
-                            .errors(List.of("user not found or logged in or token expired"))
-                            .statusCode(HttpStatus.NOT_FOUND.value())
-                            .status(HttpStatus.NOT_FOUND)
+        log.info("logged in user gotten for getAllPermissions");
+        return permissionRepository.findAll().collectList()
+                .flatMap(permissions -> {
+                    log.info("permissions gotten");
+                    return Mono.just(Response.<List<Permissions>>builder()
+                            .data(permissions)
+                            .message(SUCCESSFUL)
+                            .status(HttpStatus.OK)
+                            .statusCode(HttpStatus.OK.value())
+                            .build());
+                })
+                .doOnError(throwable -> {
+                    log.error("error fetching all permissions from db, error is {}",throwable.getLocalizedMessage());
+                    throw new CustomException(Response.builder()
                             .message(FAILED)
-                    .build());
+                            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .errors(List.of("error fetching permissions from db",throwable.getLocalizedMessage()))
+                            .build(), HttpStatus.INTERNAL_SERVER_ERROR);                    });
 
-        })).doOnError(throwable -> {
-            log.error("error fetching logged in user. error is {}",throwable.getLocalizedMessage());
-            throw new CustomException(Response.builder()
-                    .message(FAILED)
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .errors(List.of("error fetching logged in user",throwable.getLocalizedMessage()))
-                    .build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        });
     }
 
     @Override

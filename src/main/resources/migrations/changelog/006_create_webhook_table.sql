@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS webhook (
+      id SERIAL PRIMARY KEY,
+      uuid VARCHAR(100) NOT NULL UNIQUE ,
+      merchant_id VARCHAR(100) NOT NULL UNIQUE,
+      url VARCHAR(150) NOT NULL,
+      secret_hash VARCHAR(255) NULL ,
+      created_at TIMESTAMP WITHOUT TIME ZONE,
+      updated_at TIMESTAMP WITHOUT TIME ZONE
+);

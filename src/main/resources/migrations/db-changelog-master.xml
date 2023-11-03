@@ -7,4 +7,9 @@
     <include file="changelog/002_create_auditlog_table.sql" relativeToChangelogFile="true"/>
     <include file="changelog/003_create_business_table.sql" relativeToChangelogFile="true"/>
     <include file="changelog/004_create_wema_account_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/005_alter_transaction_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/006_create_webhook_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/007_update_business_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/008_update_transaction_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/009_update_transaction_table.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

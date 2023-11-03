@@ -13,5 +13,5 @@ public interface IRoleService {
     Mono<Void> createDefaultRole(String userId,String merchantID,String userType);
     Mono<Response<RolePermission>> addPermissionToUser(UpdateRoleDTO request);
     Mono<Response<Void>> removePermissionFromUser(UpdateRoleDTO request);
-    Mono<Response<RolePermission>> viewUserRole(String userId);
+    Mono<Response<List<RolePermission>>> viewUserRole(String userId);
 }

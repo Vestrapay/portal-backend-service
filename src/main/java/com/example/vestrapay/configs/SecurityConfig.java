@@ -40,7 +40,8 @@ public class SecurityConfig {
                                 "/api/v1/business/**",
                                 "/api/v1/payment-method/**",
                                 "/api/v1/user/**",
-                                "api/v1/kyc/**",
+                                "/api/v1/kyc/**",
+                                "/api/v1/admin/**",
                                 "/**",
                                 "/api/v1/user/register")
                         .permitAll()

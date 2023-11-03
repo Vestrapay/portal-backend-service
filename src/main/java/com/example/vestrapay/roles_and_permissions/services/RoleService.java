@@ -93,8 +93,12 @@ public class RoleService implements IRoleService {
             if (userType.equalsIgnoreCase("MERCHANT")){
                 createMerchantRole(userId,merchantId).subscribe();
             }
-            else {
+            else if (userType.equalsIgnoreCase("MERCHANT_USER")){
                 createMerchantUser(userId,merchantId).subscribe();
+            }
+            else {
+                createAdminRole(userId).subscribe();
+
             }
             return true;
         });
@@ -166,20 +170,19 @@ public class RoleService implements IRoleService {
     }
     @Override
     public Mono<Response<Void>> removePermissionFromUser(UpdateRoleDTO request) {
-        log.info("about adding permission to user with DTO {}",request.toString());
+        log.info("about removing permission to user with DTO {}",request.toString());
         return authenticationService.getLoggedInUser()
                 .flatMap(user -> {
-                    return rolePermissionRepository.findByUserIdAndMerchantIDAndPermissionId(user.getMerchantId(), request.getUserId(),request.getPermissions().getPermissionName())
+                    return rolePermissionRepository.findByUserIdAndMerchantIDAndPermissionId(request.getUserId(), user.getMerchantId(),request.getPermissions().getPermissionName())
                             .flatMap(rolePermission -> {
                                 log.info("role permission found");
-                                return rolePermissionRepository.delete(rolePermission)
-                                        .flatMap(unused -> {
-                                            return Mono.just(Response.<Void>builder()
-                                                            .message(SUCCESSFUL)
-                                                            .statusCode(HttpStatus.NO_CONTENT.value())
-                                                            .status(HttpStatus.NO_CONTENT)
-                                                    .build());
-                                        });
+                                rolePermissionRepository.delete(rolePermission).subscribe();
+                                return Mono.just(Response.<Void>builder()
+                                        .message(SUCCESSFUL)
+                                        .statusCode(HttpStatus.NO_CONTENT.value())
+                                        .status(HttpStatus.NO_CONTENT)
+                                        .build());
+
 
                             }).switchIfEmpty(Mono.defer(() -> {
                                 log.error("role permission not found");
@@ -221,8 +224,23 @@ public class RoleService implements IRoleService {
                 });
     }
     @Override
-    public Mono<Response<RolePermission>> viewUserRole(String userId) {
-        return null;
+    public Mono<Response<List<RolePermission>>> viewUserRole(String userId) {
+
+        return authenticationService.getLoggedInUser()
+                .flatMap(user -> {
+                    return rolePermissionRepository.findByUserIdAndMerchantID(userId,user.getMerchantId())
+                            .collectList()
+                            .flatMap(rolePermissions -> {
+                                return Mono.just(Response.<List<RolePermission>>builder()
+                                                .statusCode(HttpStatus.OK.value())
+                                                .status(HttpStatus.OK)
+                                                .data(rolePermissions)
+                                                .message(SUCCESSFUL)
+                                        .build());
+                            });
+
+
+                });
     }
 
     private Mono<Response<Boolean>> createMerchantRole(String userId,String merchantId){
@@ -352,5 +370,74 @@ public class RoleService implements IRoleService {
             log.error("error creating default merchant role. error is {}",throwable.getLocalizedMessage());
             throw new CustomException();
         });
+    }
+    private Mono<Response<Boolean>> createAdminRole(String userId){
+        log.info("creating default admin role for user {}",userId);
+        return Mono.defer(() -> {
+            return rolePermissionRepository.findByUserId(userId).collectList().flatMap(rolePermission -> {
+                if (rolePermission.isEmpty()){
+                    return permissionService.getAllPermissions().flatMap(listResponse -> {
+                        listResponse.getData().forEach(permissions -> {
+                            log.info("creating permission {} for user {}",permissions,userId);
+                            rolePermissionRepository.save(RolePermission.builder()
+                                    .uuid(UUID.randomUUID().toString())
+                                    .userId(userId)
+                                    .permissionId(permissions.getPermissionName())
+                                    .build()).subscribe();
+
+                        });
+
+                        log.info("admin roles created");
+                        return Mono.just(Response.<Boolean>builder()
+                                .data(Boolean.TRUE)
+                                .build());
+                    });
+
+                }
+                else {
+                    log.error("role permission already exists for admin {}",userId);
+                    return Mono.just(Response.<Boolean>builder()
+                            .message(FAILED)
+                            .status(HttpStatus.CONFLICT)
+                            .build());
+                }
+
+            }).switchIfEmpty(Mono.defer(() -> {
+                return permissionService.getAllPermissions().flatMap(listResponse -> {
+                    listResponse.getData().forEach(permissions -> {
+                        log.info("creating merchant role for user");
+                        rolePermissionRepository.save(RolePermission.builder()
+                                .uuid(UUID.randomUUID().toString())
+                                .merchantID("VESTRAPAY")
+                                .userId(userId)
+                                .permissionId(permissions.getPermissionName())
+                                .build()).subscribe();
+
+                    });
+
+                    log.info("merchant roles created");
+                    return Mono.just(Response.<Boolean>builder()
+                            .data(Boolean.TRUE)
+                            .build());
+                });
+            })).doOnError(throwable -> {
+                log.error("error fetching logged in user. error is {}",throwable.getLocalizedMessage());
+                throw new CustomException(Response.builder()
+                        .message(FAILED)
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .errors(List.of("error fetching logged in user",throwable.getLocalizedMessage()))
+                        .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+            });
+
+        }).doOnError(CustomException.class, throwable -> {
+            log.error("error creating default merchant role. error is {}",throwable.getLocalizedMessage());
+            throw new CustomException(Response.builder()
+                    .message(FAILED)
+                    .statusCode(throwable.getHttpStatus().value())
+                    .status(throwable.getHttpStatus())
+                    .data(throwable.getResponse().getData())
+                    .errors(throwable.getResponse().getErrors())
+                    .build(), throwable.getHttpStatus());        });
     }
 }

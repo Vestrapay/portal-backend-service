@@ -1,0 +1,1 @@
+ALTER TABLE vestrapay_transactions ADD merchant_id varchar(255);

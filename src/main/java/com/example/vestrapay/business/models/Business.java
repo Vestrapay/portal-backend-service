@@ -1,5 +1,7 @@
 package com.example.vestrapay.business.models;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -66,11 +68,13 @@ public class Business {
     private boolean transfersViaDashboard;
     @Column("disable_all_transfers")
     private boolean disableAllTransfers;
-
     //payment methods
     @Column("payment_methods")
     private String paymentMethod; //list of payment methods coma separated
 
+    @Enumerated(EnumType.STRING)
+    @Column("settlement_time")
+    private String settlementTime;
     @CreatedDate
     @Column("date_created")
     private LocalDateTime dateCreated;

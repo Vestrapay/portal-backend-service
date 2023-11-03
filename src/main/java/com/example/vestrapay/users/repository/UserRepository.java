@@ -1,5 +1,6 @@
 package com.example.vestrapay.users.repository;
 
+import com.example.vestrapay.users.enums.UserType;
 import com.example.vestrapay.users.models.User;
 import org.springframework.data.r2dbc.repository.Modifying;
 import org.springframework.data.r2dbc.repository.Query;
@@ -16,5 +17,7 @@ public interface UserRepository extends R2dbcRepository<User,Long> {
 
     Flux<User>findByMerchantId(String merchantId);
     Mono<User>findByMerchantIdAndUuid(String merchantId,String uuid);
+
+    Flux<User>findByUserType(UserType userType);
 
 }

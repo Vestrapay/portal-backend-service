@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS business (
    business_name VARCHAR(100) NOT NULL ,
    business_address VARCHAR(255) NOT NULL ,
    business_phone_number VARCHAR(20) NOT NULL ,
-   business_email VARCHAR(20) NOT NULL UNIQUE,
+   business_email VARCHAR(255) NOT NULL UNIQUE,
    business_support_phone_number VARCHAR(20) NOT NULL UNIQUE,
    business_support_email_address VARCHAR(50) NOT NULL UNIQUE,
    country VARCHAR(50) NOT NULL,

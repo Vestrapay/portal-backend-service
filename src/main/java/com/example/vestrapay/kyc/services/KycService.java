@@ -68,7 +68,7 @@ public class KycService implements IKycService {
     public Mono<Response<List<User>>> update(UpdateKycDTO request) {
         return authenticationService.getLoggedInUser()
                 .flatMap(user -> {
-                    if (user.getUserType().equals(UserType.ADMIN)||user.getUserType().equals(UserType.COMPLIANCE)||user.getUserType().equals(UserType.SUPER_ADMIN)){
+                    if (user.getUserType().equals(UserType.ADMIN)||user.getUserType().equals(UserType.SUPER_ADMIN)){
                         log.info("about updating user with id {} by compliance officer {}",request.getUserId(),user.getEmail());
 
                         return userRepository.findByMerchantId(request.getUserId())

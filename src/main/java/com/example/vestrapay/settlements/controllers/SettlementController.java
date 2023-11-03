@@ -1,8 +1,10 @@
 package com.example.vestrapay.settlements.controllers;
 
 import com.example.vestrapay.settlements.dtos.SettlementDTO;
+import com.example.vestrapay.settlements.enums.SettlementEnum;
 import com.example.vestrapay.settlements.interfaces.ISettlementService;
 import com.example.vestrapay.settlements.models.Settlement;
+import com.example.vestrapay.settlements.models.SettlementDurations;
 import com.example.vestrapay.settlements.models.WemaAccounts;
 import com.example.vestrapay.users.models.User;
 import com.example.vestrapay.utils.dtos.Response;
@@ -78,5 +80,12 @@ public class SettlementController {
     public Mono<ResponseEntity<Response<WemaAccounts>>>viewMerchantWemaAccount(@RequestBody User request){
         return settlementService.generateWemaAccountForMerchant(request)
                 .map(settlementResponse -> ResponseEntity.status(settlementResponse.getStatus()).body(settlementResponse));
+    }
+
+    @GetMapping("configure-settlement-duration")
+    public Mono<ResponseEntity<Response<List<SettlementEnum>>>>settlementDurations(){
+        return settlementService.settlementDurations()
+                .map(settlementResponse -> ResponseEntity.status(settlementResponse.getStatus()).body(settlementResponse));
+
     }
 }
