@@ -1,0 +1,65 @@
+# installing java to base docker from amazon
+#https://github.com/aws/aws-codebuild-docker-images/blob/master/ubuntu/java/openjdk-8/Dockerfile
+#https://github.com/aws/aws-codebuild-docker-images/blob/master/ubuntu/docker/1.12.1/Dockerfile
+version: 0.2
+
+env:
+  variables:
+      JAVA_VERSION: "17"
+#      JDK_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
+#      JRE_HOME: "/usr/lib/jvm/java-8-openjdk-amd64/jre"
+      MAVEN_VERSION: "3.0.5"
+#      JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
+      AWS_ACCOUNT_ID : "560723909188"
+      IMAGE_REPO_NAME : "vestrapay-backend"
+      IMAGE_TAG : "latest"
+  #parameter-store:
+     # key: "value"
+     # key: "value"
+
+phases:
+  install:
+    commands:
+      - apt-get update
+      - apt-get install -y software-properties-common
+      - add-apt-repository ppa:openjdk-r/ppa
+      - apt-get update
+      - apt-get -y install python-setuptools
+      - apt-get -y install openjdk-$JAVA_VERSION-jdk
+      - apt-get install -y maven
+      - apt-get clean
+      - update-ca-certificates -f
+      - rm -fr /var/lib/apt/lists/* /tmp/* /var/tmp/*
+      # - command
+  pre_build:
+    commands:
+        - echo Maven version
+        - mvn -version
+        - echo Logging in to Amazon ECR...
+        - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+      # - command
+      # - command
+  build:
+    commands:
+        - echo Build started on `date`
+        - printenv
+        #- gradle build
+        - mvn clean package -Pprod docker:build
+        - docker images -a
+        - echo Building the Docker image...
+        - docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+        - docker images -a
+
+      # - command
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - echo Writing image definitions file...
+      - printf '[{"name":"vestrapay-backend","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > imagedefinitions.json
+artifacts:
+  files:
+    - target/VestraPay-0.0.1-SNAPSHOT.jar
+    - imagedefinitions.json
+

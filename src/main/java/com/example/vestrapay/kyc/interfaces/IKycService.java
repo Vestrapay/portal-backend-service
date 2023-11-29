@@ -7,9 +7,10 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IKycService {
-    Mono<Response<Boolean>> upload(MultipartFile[] fileList);
+    Mono<Response<Boolean>> upload(Map<String, MultipartFile[]> fileList);
 
     Mono<Response<List<User>>> update(UpdateKycDTO request);
 }

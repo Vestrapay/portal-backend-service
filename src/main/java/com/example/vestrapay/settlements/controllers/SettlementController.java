@@ -4,7 +4,6 @@ import com.example.vestrapay.settlements.dtos.SettlementDTO;
 import com.example.vestrapay.settlements.enums.SettlementEnum;
 import com.example.vestrapay.settlements.interfaces.ISettlementService;
 import com.example.vestrapay.settlements.models.Settlement;
-import com.example.vestrapay.settlements.models.SettlementDurations;
 import com.example.vestrapay.settlements.models.WemaAccounts;
 import com.example.vestrapay.users.models.User;
 import com.example.vestrapay.utils.dtos.Response;
@@ -76,9 +75,9 @@ public class SettlementController {
                 .map(settlementResponse -> ResponseEntity.status(settlementResponse.getStatus()).body(settlementResponse));
     }
 
-    @PostMapping("merchant-generate-wema-account")
-    public Mono<ResponseEntity<Response<WemaAccounts>>>viewMerchantWemaAccount(@RequestBody User request){
-        return settlementService.generateWemaAccountForMerchant(request)
+    @GetMapping("merchant-generate-wema-account")
+    public Mono<ResponseEntity<Response<WemaAccounts>>>generateVirtualAccount(){
+        return settlementService.generateWemaAccountForMerchant()
                 .map(settlementResponse -> ResponseEntity.status(settlementResponse.getStatus()).body(settlementResponse));
     }
 

@@ -86,6 +86,12 @@ public class UserController {
         return Mono.just(ResponseEntity.ok(null));
     }
 
+    @GetMapping("migrate-to-prod")
+    public Mono<ResponseEntity<Response<?>>> migrateToProd(@RequestHeader String merchantId,@RequestBody @Valid String userId){
+        return userService.migrateToProd(userId,merchantId)
+                .map(response -> ResponseEntity.status(response.getStatus()).body(response));
+    }
+
     @RequestMapping(
             value = "/**",
             method = RequestMethod.OPTIONS

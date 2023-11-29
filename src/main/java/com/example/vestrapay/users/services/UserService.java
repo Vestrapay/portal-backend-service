@@ -20,6 +20,7 @@ import com.example.vestrapay.utils.service.RedisUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,8 @@ public class UserService implements IUserService {
     private final RolePermissionRepository rolePermissionRepository;
     private final ISettlementService settlementService;
     ExecutorService executorService = Executors.newCachedThreadPool();
+    @Value("${admin.notification.email}")
+    String defaultNotificationEmail;
     @Override
     public Mono<Response<Void>> createAccount(UserDTO request) {
         return userRepository.findUserByEmail(request.getEmail())
@@ -71,7 +74,7 @@ public class UserService implements IUserService {
                     user.setKycCompleted(false);
                     return userRepository.save(user)
                             .flatMap(user1 -> {
-                                redisUtility.setValue(user1.getEmail()+"_OTP",otp,300);
+                                redisUtility.setValue(user1.getEmail()+"_OTP",otp,60);
                                 log.info("OTP for user {} is {}",user1.getEmail(),otp);
                                 notificationService.sendEmailAsync(EmailDTO.builder()
                                         .to(user.getEmail())
@@ -80,7 +83,7 @@ public class UserService implements IUserService {
                                         .build()).subscribe();
 //                                settlementService.generateWemaAccountForMerchant(user1).subscribe();
                                 log.info("user successfully registered");
-                                roleService.createDefaultRole(user.getUuid(), user.getMerchantId(), "MERCHANT").subscribe();
+//                                roleService.createDefaultRole(user.getUuid(), user.getMerchantId(), "MERCHANT").subscribe();
                                 return Mono.just(Response.<Void>builder()
                                                 .statusCode(HttpStatus.CREATED.value())
                                                 .status(HttpStatus.CREATED)
@@ -546,6 +549,49 @@ public class UserService implements IUserService {
     @Override
     public Mono<Response<Void>> deleteUser(String userId) {
         return Mono.empty();
+    }
+
+    @Override
+    public Mono<Response<?>> migrateToProd(String userId, String merchantId) {
+        //todo check if all KYC docs has been uploaded and approved
+        return authenticationService.getLoggedInUser()
+                .flatMap(user -> {
+                    if (user.getUuid().equalsIgnoreCase(userId)&&user.getMerchantId().equalsIgnoreCase(merchantId)){
+                        if (!user.isKycCompleted()){
+                            return Mono.just(Response.builder()
+                                            .message(FAILED)
+                                            .statusCode(HttpStatus.UNAUTHORIZED.value())
+                                            .status(HttpStatus.UNAUTHORIZED)
+                                            .errors(List.of("KYC not completely validated"))
+                                    .build());
+                        }
+                        else {
+                            notificationService.sendEmailAsync(EmailDTO.builder()
+                                            .subject("MIGRATION TO PRODUCTION FOR MERCHANT "+user.getEmail())
+                                            .body("dear Admin, kindly review migration to prod for merchant.")
+                                            .to(defaultNotificationEmail)
+                                    .build()).subscribe();
+                            return Mono.just(Response.builder()
+                                    .message(SUCCESSFUL)
+                                    .statusCode(HttpStatus.OK.value())
+                                    .status(HttpStatus.OK)
+                                    .data("Migration in progress. migration would be completed in 24 hours. contact admin for support related issues")
+                                    .build());
+
+                        }
+                    }
+                    else {
+
+                        return Mono.just(Response.builder()
+                                        .message(FAILED)
+                                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                                        .status(HttpStatus.UNAUTHORIZED)
+                                        .errors(List.of("User not authorized to trigger migration. contact merchant user"))
+                                .build());
+                    }
+                });
+        //notify admins
+        //generate live keys
     }
 
 

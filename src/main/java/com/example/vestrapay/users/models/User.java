@@ -60,6 +60,8 @@ public class User implements UserDetails {
     private String otp;
     @Column("kyc_completed")
     private boolean kycCompleted;
+    @Column("required_documents")
+    private String requiredDocuments;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -8,6 +8,7 @@ import com.example.vestrapay.configs.JwtService;
 import com.example.vestrapay.exceptions.CustomException;
 import com.example.vestrapay.notifications.interfaces.INotificationService;
 import com.example.vestrapay.notifications.models.EmailDTO;
+import com.example.vestrapay.roles_and_permissions.services.DefaultRoleService;
 import com.example.vestrapay.users.models.User;
 import com.example.vestrapay.users.repository.UserRepository;
 import com.example.vestrapay.utils.dtos.Response;
@@ -41,6 +42,7 @@ public class AuthenticationService implements IAuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final DefaultRoleService defaultRoleService;
 
 
     @Override
@@ -86,16 +88,23 @@ public class AuthenticationService implements IAuthenticationService {
         else {
             log.info("OTP gotten from Redis");
             if (otp.toString().equals(request.getOtp())){
-                return userRepository.updateUserByEmail(request.getEmail()).flatMap(user1 -> {
+                return userRepository.findUserByEmail(request.getEmail()).flatMap(user1 -> {
                     log.info("user OTP verified for user {}",user1.toString());
                     redisUtility.removeValue(request.getEmail() + "_OTP");
 
-                    return Mono.just(Response.<Boolean>builder()
-                            .data(Boolean.TRUE)
-                            .message(SUCCESSFUL)
-                            .status(HttpStatus.OK)
-                            .statusCode(HttpStatus.OK.value())
-                            .build());
+                    user1.setEnabled(true);
+                    return userRepository.save(user1)
+                            .flatMap(user -> {
+                                defaultRoleService.createDefaultRole(user.getUuid(), user.getMerchantId(),"MERCHANT").subscribe();
+                                return Mono.just(Response.<Boolean>builder()
+                                        .data(Boolean.TRUE)
+                                        .message(SUCCESSFUL)
+                                        .status(HttpStatus.OK)
+                                        .statusCode(HttpStatus.OK.value())
+                                        .build());
+                            });
+
+
                 }).doOnError(throwable -> {
                     log.error("error updating user with OTP. error is {}",throwable.getLocalizedMessage());
                     throw new CustomException(Response.<Boolean>builder()

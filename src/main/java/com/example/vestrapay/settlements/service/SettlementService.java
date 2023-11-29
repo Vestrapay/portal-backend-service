@@ -8,15 +8,12 @@ import com.example.vestrapay.settlements.dtos.SettlementDTO;
 import com.example.vestrapay.settlements.enums.SettlementEnum;
 import com.example.vestrapay.settlements.interfaces.ISettlementService;
 import com.example.vestrapay.settlements.models.Settlement;
-import com.example.vestrapay.settlements.models.SettlementDurations;
 import com.example.vestrapay.settlements.models.WemaAccounts;
 import com.example.vestrapay.settlements.repository.SettlementDurationRepository;
 import com.example.vestrapay.settlements.repository.SettlementRepository;
 import com.example.vestrapay.settlements.repository.WemaAccountRepository;
 import com.example.vestrapay.users.enums.UserType;
-import com.example.vestrapay.users.models.User;
 import com.example.vestrapay.utils.dtos.Response;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -117,49 +114,61 @@ public class SettlementService implements ISettlementService {
     }
 
     @Override
-    public Mono<Response<WemaAccounts>> generateWemaAccountForMerchant(@NotNull User merchant) {
-        if (!merchant.getUserType().equals(UserType.MERCHANT)){
-            return Mono.just(Response.<WemaAccounts>builder()
-                    .statusCode(HttpStatus.UNAUTHORIZED.value())
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .message(FAILED)
-                    .errors(List.of("Only Merchants can create account"))
-                    .build());
-        }
-        log.info("user gotten about generating wema account for merchant");
-        return wemaAccountRepository.findByMerchantId(merchant.getMerchantId())
-                .flatMap(wemaAccounts -> {
-                    log.error("wema account already generated for merchant");
-                    return Mono.just(Response.<WemaAccounts>builder()
-                            .data(wemaAccounts)
-                            .message(SUCCESSFUL)
-                            .status(HttpStatus.OK)
-                            .statusCode(HttpStatus.OK.value())
-                            .build());
-                })
-                .switchIfEmpty(Mono.defer(() -> {
-                    log.info("about creating wema account for merchant {}",merchant.getMerchantId());
-                    //since Id is always unique on the DB as primary key
-                    String wemaAccountNumber = generateAccountNumber(merchant.getId());
-                    WemaAccounts wemaAccount = WemaAccounts.builder()
-                            .merchantId(merchant.getMerchantId())
-                            .accountName(merchant.getBusinessName())
-                            .accountNumber(wemaAccountNumber)
-                            .accountName(merchant.getFirstName().concat(" ").concat(merchant.getLastName()))
-                            .uuid(UUID.randomUUID().toString())
-                            .build();
-
-                    return wemaAccountRepository.save(wemaAccount)
+    public Mono<Response<WemaAccounts>> generateWemaAccountForMerchant() {
+        return authenticationService.getLoggedInUser()
+                .flatMap(merchant -> {
+                    if (!merchant.getUserType().equals(UserType.MERCHANT)){
+                        return Mono.just(Response.<WemaAccounts>builder()
+                                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                                .status(HttpStatus.UNAUTHORIZED)
+                                .message(FAILED)
+                                .errors(List.of("Only Merchants can create account"))
+                                .build());
+                    }
+                    log.info("user gotten about generating wema account for merchant");
+                    return wemaAccountRepository.findByMerchantId(merchant.getMerchantId())
                             .flatMap(wemaAccounts -> {
-                                log.info("account successfully created for merchant");
+                                log.error("wema account already generated for merchant");
                                 return Mono.just(Response.<WemaAccounts>builder()
                                         .data(wemaAccounts)
                                         .message(SUCCESSFUL)
-                                        .status(HttpStatus.CREATED)
-                                        .statusCode(HttpStatus.CREATED.value())
+                                        .status(HttpStatus.OK)
+                                        .statusCode(HttpStatus.OK.value())
                                         .build());
                             })
-                            .doOnError(throwable -> {
+                            .switchIfEmpty(Mono.defer(() -> {
+                                log.info("about creating wema account for merchant {}",merchant.getMerchantId());
+                                //since Id is always unique on the DB as primary key
+                                String wemaAccountNumber = generateAccountNumber(merchant.getId());
+                                WemaAccounts wemaAccount = WemaAccounts.builder()
+                                        .merchantId(merchant.getMerchantId())
+                                        .accountName(merchant.getBusinessName())
+                                        .accountNumber(wemaAccountNumber)
+                                        .accountName(merchant.getFirstName().concat(" ").concat(merchant.getLastName()))
+                                        .uuid(UUID.randomUUID().toString())
+                                        .build();
+
+                                return wemaAccountRepository.save(wemaAccount)
+                                        .flatMap(wemaAccounts -> {
+                                            log.info("account successfully created for merchant");
+                                            return Mono.just(Response.<WemaAccounts>builder()
+                                                    .data(wemaAccounts)
+                                                    .message(SUCCESSFUL)
+                                                    .status(HttpStatus.CREATED)
+                                                    .statusCode(HttpStatus.CREATED.value())
+                                                    .build());
+                                        })
+                                        .doOnError(throwable -> {
+                                            log.error("Error generating wema account. error is {}",throwable.getLocalizedMessage());
+                                            throw new CustomException(Response.builder()
+                                                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                                                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                                    .message(FAILED)
+                                                    .errors(List.of("Error creating wema account. error is "+throwable.getLocalizedMessage()))
+                                                    .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+                                        });
+                            })).doOnError(throwable -> {
                                 log.error("Error generating wema account. error is {}",throwable.getLocalizedMessage());
                                 throw new CustomException(Response.builder()
                                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -169,16 +178,16 @@ public class SettlementService implements ISettlementService {
                                         .build(), HttpStatus.INTERNAL_SERVER_ERROR);
 
                             });
-                })).doOnError(throwable -> {
-                    log.error("Error generating wema account. error is {}",throwable.getLocalizedMessage());
+                }).doOnError(throwable -> {
+                    log.error("error fetching logged in user");
                     throw new CustomException(Response.builder()
                             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .message(FAILED)
-                            .errors(List.of("Error creating wema account. error is "+throwable.getLocalizedMessage()))
+                            .errors(List.of("Error fetching logged in user. error is "+throwable.getLocalizedMessage()))
                             .build(), HttpStatus.INTERNAL_SERVER_ERROR);
-
                 });
+
     }
 
     @Override

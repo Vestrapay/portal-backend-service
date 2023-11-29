@@ -1,0 +1,1 @@
+alter table payment_link drop index payment_link_merchant_id_key

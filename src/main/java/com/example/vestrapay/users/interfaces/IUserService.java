@@ -20,4 +20,6 @@ public interface IUserService {
     Mono<Response<User>> viewUser();
 
     Mono<Response<Void>> deleteUser(String userId);
+
+    Mono<Response<?>>migrateToProd(String userId, String merchantId);
 }

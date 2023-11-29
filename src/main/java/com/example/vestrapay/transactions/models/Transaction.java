@@ -30,6 +30,7 @@ public class Transaction {
     private PaymentTypeEnum paymentType;
     private BigDecimal amount;
     private String pan;
+    private BigDecimal fee;
     @Column("transaction_reference")
     private String transactionReference;
     @Column("vestrapay_reference")
@@ -50,6 +51,8 @@ public class Transaction {
     private String merchantId;
     @Column("provider_name")
     private String providerName;
+    @Column("settlement_status")
+    private Status settlementStatus;
     @Column("created_at")
     @CreatedDate
     private LocalDateTime createdAt;

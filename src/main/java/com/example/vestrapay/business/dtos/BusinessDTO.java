@@ -36,6 +36,6 @@ public class BusinessDTO {
 
     //payment methods
     private String paymentMethod; //list of payment methods coma separated
-    private SettlementDurations settlementTime;
+    private String settlementTime;
 
 }

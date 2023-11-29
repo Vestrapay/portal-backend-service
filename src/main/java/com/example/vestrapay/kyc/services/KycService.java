@@ -10,9 +10,11 @@ import com.example.vestrapay.users.enums.UserType;
 import com.example.vestrapay.users.models.User;
 import com.example.vestrapay.users.repository.UserRepository;
 import com.example.vestrapay.utils.dtos.Response;
-import com.example.vestrapay.utils.file_upload.IFileService;
+import com.example.vestrapay.utils.file_upload.IFileServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.example.vestrapay.utils.dtos.Constants.FAILED;
 import static com.example.vestrapay.utils.dtos.Constants.SUCCESSFUL;
@@ -29,7 +32,9 @@ import static com.example.vestrapay.utils.dtos.Constants.SUCCESSFUL;
 @RequiredArgsConstructor
 @Slf4j
 public class KycService implements IKycService {
-    private final IFileService fileService;
+    @Autowired
+    @Qualifier("FileService")
+    private IFileServiceImpl fileService;
     private final IAuthenticationService authenticationService;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
@@ -37,7 +42,7 @@ public class KycService implements IKycService {
     @Value("${compliance.email}")
     String complianceEmail;
     @Override
-    public Mono<Response<Boolean>> upload(MultipartFile[] fileList) {
+    public Mono<Response<Boolean>> upload(Map<String, MultipartFile[]> fileList) {
         return authenticationService.getLoggedInUser()
                 .flatMap(user -> {
                     //todo only allow registered businesses to upload kyc documents

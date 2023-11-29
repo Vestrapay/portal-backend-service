@@ -12,4 +12,14 @@
     <include file="changelog/007_update_business_table.sql" relativeToChangelogFile="true"/>
     <include file="changelog/008_update_transaction_table.sql" relativeToChangelogFile="true"/>
     <include file="changelog/009_update_transaction_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/010_update_transaction_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/011_create_paymentlink_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/013_create_dispute_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/014_update_paymentlink_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/015_update_paymentlink_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/016_update_user_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/017_create_paymentmethod_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/018_create_paymentproviders_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/019_create_routing_rule_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/020_update_transaction_table.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

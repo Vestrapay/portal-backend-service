@@ -12,7 +12,6 @@ public interface IAuthenticationService {
     Mono<Response<Boolean>> verifyOTP(VerifyOtpDTO request);
     Mono<Response<Boolean>> changePassword(ChangePasswordDTO request);
     Mono<Response<Boolean>> resetPassword(String email);
-
     Mono<Response<Boolean>> resendOTP(String email);
     Mono<User> getLoggedInUser();
 

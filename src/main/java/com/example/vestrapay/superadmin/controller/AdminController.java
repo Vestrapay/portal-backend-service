@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -26,6 +27,7 @@ public class AdminController{
     private final IUserService userService;
     private final IAdminService adminService;
     @PostMapping("create-admin")
+    @PreAuthorize("hasAuthority('CREATE_ADMIN')")
     public Mono<ResponseEntity<Response<?>>> createAdmin(@RequestBody AdminUserDTO request){
 
         return userService.createAdminAccount(request)
@@ -34,6 +36,7 @@ public class AdminController{
     }
 
     @GetMapping("view-all-admin")
+    @PreAuthorize("hasAuthority('CREATE_ADMIN')")
     public Mono<ResponseEntity<Response<List<User>>>> viewAllAdmin(){
 
         return adminService.viewAllAdmin()
@@ -42,9 +45,19 @@ public class AdminController{
     }
 
     @GetMapping("view-all-merchants")
+    @PreAuthorize("hasAuthority('CREATE_ADMIN')")
     public Mono<ResponseEntity<Response<List<User>>>> viewAllMerchants(){
 
         return adminService.viewAllMerchants()
+                .map(voidResponse -> ResponseEntity.status(voidResponse.getStatus()).body(voidResponse));
+
+    }
+
+    @GetMapping("disable-merchant/{merchantId}")
+    @PreAuthorize("hasAuthority('CREATE_ADMIN')")
+    public Mono<ResponseEntity<Response<Boolean>>> disableMerchant(@PathVariable("merchantId")String merchantId){
+
+        return adminService.disableMerchant(merchantId)
                 .map(voidResponse -> ResponseEntity.status(voidResponse.getStatus()).body(voidResponse));
 
     }

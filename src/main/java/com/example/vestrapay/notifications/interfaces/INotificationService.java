@@ -5,4 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface INotificationService {
     Mono<Void> sendEmailAsync(EmailDTO email);
+    Mono<Void> notifyAdmins(String body);
 }

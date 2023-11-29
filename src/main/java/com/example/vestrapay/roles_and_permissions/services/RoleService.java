@@ -1,6 +1,6 @@
 package com.example.vestrapay.roles_and_permissions.services;
 
-import com.example.vestrapay.authentications.services.AuthenticationService;
+import com.example.vestrapay.authentications.interfaces.IAuthenticationService;
 import com.example.vestrapay.exceptions.CustomException;
 import com.example.vestrapay.roles_and_permissions.dtos.RoleDTO;
 import com.example.vestrapay.roles_and_permissions.dtos.UpdateRoleDTO;
@@ -27,7 +27,7 @@ import static com.example.vestrapay.utils.dtos.Constants.SUCCESSFUL;
 @RequiredArgsConstructor
 public class RoleService implements IRoleService {
     private final RolePermissionRepository rolePermissionRepository;
-    private final AuthenticationService authenticationService;
+    private final IAuthenticationService authenticationService;
     private final IPermissionService permissionService;
     @Override
     public Mono<Response<List<RolePermission>>> createRole(RoleDTO request) {
@@ -87,23 +87,6 @@ public class RoleService implements IRoleService {
                             .build(), HttpStatus.INTERNAL_SERVER_ERROR);
                 });
     }
-    @Override
-    public Mono<Void> createDefaultRole(String userId,String merchantId,String userType) {
-        Mono<Boolean> processMono = Mono.fromCallable(() -> {
-            if (userType.equalsIgnoreCase("MERCHANT")){
-                createMerchantRole(userId,merchantId).subscribe();
-            }
-            else if (userType.equalsIgnoreCase("MERCHANT_USER")){
-                createMerchantUser(userId,merchantId).subscribe();
-            }
-            else {
-                createAdminRole(userId).subscribe();
-
-            }
-            return true;
-        });
-        processMono.subscribeOn(Schedulers.boundedElastic()).subscribe();
-        return Mono.empty();    }
     @Override
     public Mono<Response<RolePermission>> addPermissionToUser(UpdateRoleDTO request) {
         log.info("about adding permission to user with DTO {}",request.toString());
@@ -242,7 +225,24 @@ public class RoleService implements IRoleService {
 
                 });
     }
+    @Override
+    public Mono<Void> createDefaultRole(String userId,String merchantId,String userType) {
+        Mono<Boolean> processMono = Mono.fromCallable(() -> {
+            if (userType.equalsIgnoreCase("MERCHANT")){
+                createMerchantRole(userId,merchantId).subscribe();
+            }
+            else if (userType.equalsIgnoreCase("MERCHANT_USER")){
+                createMerchantUser(userId,merchantId).subscribe();
+            }
+            else {
+                createAdminRole(userId).subscribe();
 
+            }
+            return true;
+        });
+        processMono.subscribeOn(Schedulers.boundedElastic()).subscribe();
+        return Mono.empty();
+    }
     private Mono<Response<Boolean>> createMerchantRole(String userId,String merchantId){
         log.info("creating default merchant role for merchant {}",userId);
         return Mono.defer(() -> {

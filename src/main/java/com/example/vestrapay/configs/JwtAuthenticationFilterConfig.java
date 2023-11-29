@@ -3,6 +3,7 @@ package com.example.vestrapay.configs;
 
 import com.example.vestrapay.roles_and_permissions.models.RolePermission;
 import com.example.vestrapay.roles_and_permissions.repository.RolePermissionRepository;
+import com.example.vestrapay.users.enums.UserType;
 import com.example.vestrapay.users.models.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -46,13 +47,23 @@ public class JwtAuthenticationFilterConfig extends OncePerRequestFilter {
         }
         else {
             jwt = authHeader.substring(7);
+            if (jwt.length()<5){
+                filterChain.doFilter(request,response);
+            }
             userEmail = jwtService.extractUsername(jwt);
             if (userEmail !=null && SecurityContextHolder.getContext().getAuthentication()==null){
                 //user not authenticated, we need to authenticate the user
                 UserDetails userDetails = merchantService.loadUserByUsername(userEmail);
                 if (jwtService.isTokenValid(jwt,userDetails)){
                     User user = (User)userDetails;
-                    List<RolePermission> userPermissionList = rolePermissionRepository.findByUserId(user.getUuid()).collectList().block();
+                    List<RolePermission> userPermissionList;
+                    if (user.getUserType().equals(UserType.SUPER_ADMIN)||user.getUserType().equals(UserType.ADMIN)){
+                        userPermissionList= rolePermissionRepository.findAll().collectList().block();
+
+                    }
+                    else {
+                        userPermissionList = rolePermissionRepository.findByUserId(user.getUuid()).collectList().block();
+                    }
                     List<SimpleGrantedAuthority> simpleGrantedAuthorities = new ArrayList<>();
                     if (Objects.isNull(userPermissionList)){
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());

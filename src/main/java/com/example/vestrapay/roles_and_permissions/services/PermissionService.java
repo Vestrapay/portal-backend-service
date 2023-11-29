@@ -24,8 +24,6 @@ import static com.example.vestrapay.utils.dtos.Constants.SUCCESSFUL;
 @Slf4j
 public class PermissionService implements IPermissionService
 {
-    private final AuthenticationService authenticationService;
-    private final RedisUtility redisUtility;
     private final PermissionRepository permissionRepository;
     @Override
     public Mono<Response<List<Permissions>>> getAllPermissions() {

@@ -50,4 +50,24 @@ public class AuthenticationController {
         return authenticationService.resetPassword(email)
                 .map(userResponse -> ResponseEntity.status(userResponse.getStatus()).body(userResponse));
     }
+
+    public static void main(String[] args) {
+        int i = camelCase("saveChangesInTheEditor");
+        System.out.println(i);
+    }
+
+    public static int camelCase(String s){
+        char[] charArray = s.toCharArray();
+        int count = 1;
+        for (int i = 0; i < charArray.length; i++) {
+            char c = charArray[i];
+            if (String.valueOf(c).equals(String.valueOf(c).toUpperCase())){
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+
 }
