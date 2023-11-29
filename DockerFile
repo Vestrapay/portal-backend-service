@@ -1,25 +1,11 @@
 FROM openjdk:17-jdk-slim
 
-COPY src /app/src
-
 WORKDIR /app
 
-COPY pom.xml /app
+ARG= JAR_FILE=target/VestraPay-0.0.1-SNAPSHOT.jar
 
-RUN mvn clean install -DskipTests
+ADD ${JAR_FILE} app.jar
 
-RUN ls -lh /app/target
-
-
-#
-# Package stage
-#
-FROM openjdk:17-jdk-slim
-
-WORKDIR /app
-
-COPY --from=build /app/target/VestraPay-0.0.1-SNAPSHOT.jar app.jar
-
-EXPOSE 5050
+EXPOSE 5334
 
 ENTRYPOINT ["java","-jar","app.jar"]
