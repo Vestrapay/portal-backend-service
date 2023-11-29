@@ -135,6 +135,7 @@ public class BusinessService implements IBusinessService {
                                 business.setTransfersViaDashboard(request.isTransfersViaDashboard());
                                 business.setDisableAllTransfers(request.isDisableAllTransfers());
                                 business.setPaymentMethod(request.getPaymentMethod());
+                                business.setSettlementTime(request.getSettlementTime());
 
                                 return businessRepository.save(business)
                                         .flatMap(business1 -> {

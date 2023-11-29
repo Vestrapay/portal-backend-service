@@ -13,6 +13,7 @@ env:
       AWS_ACCOUNT_ID : "560723909188"
       IMAGE_REPO_NAME : "vestrapay-backend"
       IMAGE_TAG : "latest"
+      AWS_DEFAULT_REGION: "eu-west-1"
   #parameter-store:
      # key: "value"
      # key: "value"
@@ -36,7 +37,7 @@ phases:
         - echo Maven version
         - mvn -version
         - echo Logging in to Amazon ECR...
-        - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+        - aws ecr get-login-password --region $AWS_DEFAULT_REGION
       # - command
       # - command
   build:
