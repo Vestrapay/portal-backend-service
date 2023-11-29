@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ import java.util.UUID;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class StartupConfig {
+public class StartupConfig implements ApplicationListener<ApplicationReadyEvent> {
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
@@ -43,31 +44,10 @@ public class StartupConfig {
     private List<String>paymentMethods;
 
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void run(){
-        log.info("starting application startup configs");
-        persistPermissions().subscribe();
-        persistUser().flatMap(user ->createAdminRolePermission()
-                        .flatMap(permissions -> {
-                            permissions.forEach(permissions1 -> {
-                                rolePermissionRepository.findByUserIdAndPermissionId(user.getUuid(), permissions1.getPermissionName())
-                                        .flatMap(rolePermission -> {
-                                            log.warn("role permission already exists. {}",rolePermission);
-                                            return Mono.just(rolePermission);
-                                        }).switchIfEmpty(Mono.defer(() -> {
-                                            RolePermission rolePermission = RolePermission.builder()
-                                                    .uuid(UUID.randomUUID().toString())
-                                                    .merchantID(user.getMerchantId())
-                                                    .permissionId(permissions1.getPermissionName())
-                                                    .userId(user.getUuid())
-                                                    .build();
-                                            return rolePermissionRepository.save(rolePermission);
-                                        })).subscribe();
-                            });
-                            return Mono.empty();
-                        })).subscribe();
-        persistDefaultPaymentMethods().subscribe();
-    }
+//    @EventListener(ApplicationReadyEvent.class)
+//    public void run(){
+//
+//    }
 
     private Mono<User> persistUser(){
         return userRepository.findUserByEmail(adminEmail)
@@ -174,5 +154,31 @@ public class StartupConfig {
         });
 
         return Mono.empty();
+    }
+
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        log.info("starting application startup configs");
+        persistPermissions().subscribe();
+        persistUser().flatMap(user ->createAdminRolePermission()
+                .flatMap(permissions -> {
+                    permissions.forEach(permissions1 -> {
+                        rolePermissionRepository.findByUserIdAndPermissionId(user.getUuid(), permissions1.getPermissionName())
+                                .flatMap(rolePermission -> {
+                                    log.warn("role permission already exists. {}",rolePermission);
+                                    return Mono.just(rolePermission);
+                                }).switchIfEmpty(Mono.defer(() -> {
+                                    RolePermission rolePermission = RolePermission.builder()
+                                            .uuid(UUID.randomUUID().toString())
+                                            .merchantID(user.getMerchantId())
+                                            .permissionId(permissions1.getPermissionName())
+                                            .userId(user.getUuid())
+                                            .build();
+                                    return rolePermissionRepository.save(rolePermission);
+                                })).subscribe();
+                    });
+                    return Mono.empty();
+                })).subscribe();
+        persistDefaultPaymentMethods().subscribe();
     }
 }
