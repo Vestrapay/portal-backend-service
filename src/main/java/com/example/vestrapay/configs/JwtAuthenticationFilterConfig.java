@@ -1,15 +1,16 @@
 package com.example.vestrapay.configs;
 
 
-import com.example.vestrapay.roles_and_permissions.models.RolePermission;
-import com.example.vestrapay.roles_and_permissions.repository.RolePermissionRepository;
-import com.example.vestrapay.users.enums.UserType;
-import com.example.vestrapay.users.models.User;
+import com.example.vestrapay.merchant.roles_and_permissions.models.RolePermission;
+import com.example.vestrapay.merchant.roles_and_permissions.repository.RolePermissionRepository;
+import com.example.vestrapay.merchant.users.enums.UserType;
+import com.example.vestrapay.merchant.users.models.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -40,17 +41,33 @@ public class JwtAuthenticationFilterConfig extends OncePerRequestFilter {
     //check if the request has auth Header
         final String authHeader = request.getHeader(AUTHORIZATION);
         final String jwt;
-        final String userEmail;
+        String userEmail = null;
+
 
         if (authHeader==null || !authHeader.startsWith("Bearer ")){
             filterChain.doFilter(request,response);
-        }
-        else {
+        } else if (request.getRequestURI().contains("login")) {
+            filterChain.doFilter(request,response);
+        } else {
+
             jwt = authHeader.substring(7);
             if (jwt.length()<5){
                 filterChain.doFilter(request,response);
             }
-            userEmail = jwtService.extractUsername(jwt);
+
+            try {
+                userEmail = jwtService.extractUsername(jwt);
+            }catch (Exception e){
+                System.out.println("error extracting token"+request.getRequestURI());
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+
+                // Optionally, write an error message to the response body
+                response.getWriter().write("Unauthorized: Invalid token");
+                response.getWriter().flush();
+
+                return;
+            }
             if (userEmail !=null && SecurityContextHolder.getContext().getAuthentication()==null){
                 //user not authenticated, we need to authenticate the user
                 UserDetails userDetails = merchantService.loadUserByUsername(userEmail);

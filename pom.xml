@@ -126,6 +126,11 @@
             <artifactId>lettuce-core</artifactId>
             <version>6.2.5.RELEASE</version>
         </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <version>1.12.687</version>
+        </dependency>
     </dependencies>
 
     <build>

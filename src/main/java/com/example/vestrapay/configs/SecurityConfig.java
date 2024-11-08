@@ -36,6 +36,7 @@ public class SecurityConfig {
                         "/v3/**",
                                 "/swagger-ui/**",
                                 "/api/v1/auth/**",
+                                "/api/v1/auth/*",
                                 "/api/v1/dashboard/**",
                                 "/api/v1/business/**",
                                 "/api/v1/payment-method/**",
@@ -49,6 +50,9 @@ public class SecurityConfig {
                         .authenticated())
                 .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 .authenticationProvider(authenticationProvider).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .logout(logoutConfigurer -> {
+                    logoutConfigurer.invalidateHttpSession(true).deleteCookies("JSESSIONID").clearAuthentication(true).logoutSuccessUrl("https://vestrapay.com/");
+                })
                 .cors(cors->cors.disable());
 
         return http.build();

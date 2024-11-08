@@ -1,21 +1,20 @@
 package com.example.vestrapay.configs;
 
 import com.example.vestrapay.exceptions.CustomException;
-import com.example.vestrapay.payment.model.PaymentMethods;
-import com.example.vestrapay.payment.repository.PaymentMethodRepository;
-import com.example.vestrapay.roles_and_permissions.models.Permissions;
-import com.example.vestrapay.roles_and_permissions.models.RolePermission;
-import com.example.vestrapay.roles_and_permissions.repository.PermissionRepository;
-import com.example.vestrapay.roles_and_permissions.repository.RolePermissionRepository;
-import com.example.vestrapay.users.enums.UserType;
-import com.example.vestrapay.users.models.User;
-import com.example.vestrapay.users.repository.UserRepository;
+import com.example.vestrapay.superadmin.payment.model.PaymentMethods;
+import com.example.vestrapay.superadmin.payment.repository.PaymentMethodRepository;
+import com.example.vestrapay.merchant.roles_and_permissions.models.Permissions;
+import com.example.vestrapay.merchant.roles_and_permissions.models.RolePermission;
+import com.example.vestrapay.merchant.roles_and_permissions.repository.PermissionRepository;
+import com.example.vestrapay.merchant.roles_and_permissions.repository.RolePermissionRepository;
+import com.example.vestrapay.merchant.users.enums.UserType;
+import com.example.vestrapay.merchant.users.models.User;
+import com.example.vestrapay.merchant.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -44,11 +43,6 @@ public class StartupConfig implements ApplicationListener<ApplicationReadyEvent>
     private List<String>paymentMethods;
 
 
-//    @EventListener(ApplicationReadyEvent.class)
-//    public void run(){
-//
-//    }
-
     private Mono<User> persistUser(){
         return userRepository.findUserByEmail(adminEmail)
                 .flatMap(user -> {
@@ -63,7 +57,7 @@ public class StartupConfig implements ApplicationListener<ApplicationReadyEvent>
                             .firstName(VESTRAPAY)
                             .lastName(VESTRAPAY)
                             .email(adminEmail)
-                            .phoneNumber("09059462870")
+                            .phoneNumber(VESTRAPAY)
                             .merchantId(VESTRAPAY)
                             .businessName(VESTRAPAY)
                             .password(passwordEncoder.encode(adminPassword))

@@ -22,4 +22,15 @@
     <include file="changelog/018_create_paymentproviders_table.sql" relativeToChangelogFile="true"/>
     <include file="changelog/019_create_routing_rule_table.sql" relativeToChangelogFile="true"/>
     <include file="changelog/020_update_transaction_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/021_update_transaction_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/022_update_paymentlink_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/023_update_user_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/024_update_transactions_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/025_create_document_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/026_update_user_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/027_update_transactions_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/028_update_transactions_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/029_update_transactions_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/030_create_charge_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/031_update_notification_table.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

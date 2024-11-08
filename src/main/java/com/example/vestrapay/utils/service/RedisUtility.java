@@ -19,7 +19,7 @@ public class RedisUtility {
     }
 
     public void setValue(String key, Object value, long expiry){
-        redisTemplate.opsForValue().set(defaultKey + key, value, Duration.ofSeconds(expiry));
+        redisTemplate.opsForValue().set(defaultKey + key, value, Duration.ofMinutes(expiry));
     }
 
     public Object getValue(String key){
