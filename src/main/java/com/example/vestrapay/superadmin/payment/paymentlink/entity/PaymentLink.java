@@ -50,6 +50,7 @@ public class PaymentLink {
     @CreatedDate
     @Column("date_created")
     private LocalDateTime dateCreated;
+    private String currency;
     @LastModifiedDate
     @Column("date_updated")
     private LocalDateTime dateUpdated;

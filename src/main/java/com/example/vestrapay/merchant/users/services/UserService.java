@@ -3,12 +3,12 @@ package com.example.vestrapay.merchant.users.services;
 import com.example.vestrapay.merchant.authentications.interfaces.IAuthenticationService;
 import com.example.vestrapay.exceptions.CustomException;
 import com.example.vestrapay.merchant.keys.enums.KeyUsage;
+import com.example.vestrapay.merchant.users.dtos.UserUpdateDTO;
 import com.example.vestrapay.merchant.users.interfaces.IUserService;
 import com.example.vestrapay.merchant.notifications.models.EmailDTO;
 import com.example.vestrapay.merchant.notifications.services.NotificationService;
 import com.example.vestrapay.merchant.roles_and_permissions.interfaces.IRoleService;
 import com.example.vestrapay.merchant.roles_and_permissions.repository.RolePermissionRepository;
-import com.example.vestrapay.merchant.settlements.interfaces.ISettlementService;
 import com.example.vestrapay.merchant.users.dtos.UpdateMerchantUserDTO;
 import com.example.vestrapay.superadmin.users.dto.AdminUserDTO;
 import com.example.vestrapay.merchant.users.dtos.MerchantUserDTO;
@@ -34,6 +34,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.example.vestrapay.utils.PasswordUtil.isValidPassword;
 import static com.example.vestrapay.utils.dtos.Constants.FAILED;
 import static com.example.vestrapay.utils.dtos.Constants.SUCCESSFUL;
 
@@ -57,6 +58,20 @@ public class UserService implements IUserService {
     private String environment;
     @Override
     public Mono<Response<Void>> createAccount(UserDTO request) {
+        boolean validPassword = isValidPassword(request.getPassword());
+        if (!validPassword){
+            log.error("password strength check failed {}", request.getEmail());
+            throw new CustomException(Response.<Void>builder()
+                    .message(FAILED)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .status(HttpStatus.BAD_REQUEST)
+                    .errors(List.of("Password strength check failed ","Minimum number of characters: 8\n" +
+                            "Contains a capital letter\n" +
+                            "Contains a lowercase letter\n" +
+                            "Contains a number"))
+                    .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         return userRepository.findUserByEmail(request.getEmail())
                 .flatMap(user -> {
                     log.error("user already exists with email {}",request.getEmail());
@@ -294,9 +309,6 @@ public class UserService implements IUserService {
                                     if (Strings.isNotEmpty(request.getLastName())) {
                                         user1.setCountry(request.getLastName());
                                     }
-                                    if (Strings.isNotEmpty(request.getEmail())) {
-                                        user1.setCountry(request.getEmail());
-                                    }
                                     if (Strings.isNotEmpty(request.getPhoneNumber())) {
                                         user1.setCountry(request.getPhoneNumber());
                                     }
@@ -504,14 +516,13 @@ public class UserService implements IUserService {
 
 
     @Override
-    public Mono<Response<User>> updateUser(UserDTO request) {
+    public Mono<Response<User>> updateUser(UserUpdateDTO request) {
         log.info("about updating user with DTO {}",request.toString());
         return authenticationService.getLoggedInUser().flatMap(user -> {
             user.setBusinessName(request.getBusinessName());
             user.setCountry(request.getCountry());
             user.setFirstName(request.getFirstName());
             user.setLastName(request.getLastName());
-            user.setEmail(request.getEmail());
             user.setPhoneNumber(request.getPhoneNumber());
             return userRepository.save(user)
                     .flatMap(user1 -> {

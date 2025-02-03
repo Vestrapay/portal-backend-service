@@ -27,5 +27,7 @@ public interface TransactionRepository extends R2dbcRepository<Transaction,Long>
     Mono<Transaction> findByMerchantIdAndUuid(String merchantId,String uuid);
 
     Flux<Transaction>findAllByMerchantIdAndTransactionStatusAndSettlementStatus(String merchantId, Status transactionStatus,Status settlementStatus);
+    Flux<Transaction>findAllByMerchantIdAndTransactionStatusAndSettlementStatusAndCurrency(String merchantId, Status transactionStatus,Status settlementStatus,String currency);
     Flux<Transaction>findAllByTransactionStatusAndSettlementStatus(Status transactionStatus,Status settlementStatus);
+    Flux<Transaction>findAllByTransactionStatusAndSettlementStatusAndCurrency(Status transactionStatus,Status settlementStatus,String currency);
 }

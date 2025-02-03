@@ -1,5 +1,6 @@
 package com.example.vestrapay.merchant.users.controllers;
 
+import com.example.vestrapay.merchant.users.dtos.UserUpdateDTO;
 import com.example.vestrapay.merchant.users.interfaces.IUserService;
 import com.example.vestrapay.merchant.users.dtos.MerchantUserDTO;
 import com.example.vestrapay.merchant.users.dtos.UserDTO;
@@ -34,7 +35,7 @@ public class UserController {
     }
 
     @PostMapping("update")
-    public Mono<ResponseEntity<Response<User>>> updateUser(@RequestBody @Valid UserDTO request){
+    public Mono<ResponseEntity<Response<User>>> updateUser(@RequestBody @Valid UserUpdateDTO request){
         return userService.updateUser(request)
                 .map(userResponse -> ResponseEntity.status(userResponse.getStatus()).body(userResponse));
     }

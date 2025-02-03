@@ -186,7 +186,6 @@ public class KeyService implements IKeyService {
             else
                 return keysRepository.findByUserIdAndKeyUsage(user.getUuid(),KeyUsage.LIVE.name())
                         .flatMap(keys -> {
-                            log.info("live keys gotten");
                             return Mono.just(Response.<Keys>builder()
                                     .message(SUCCESSFUL)
                                     .status(HttpStatus.OK)

@@ -118,7 +118,7 @@ public class BusinessService implements IBusinessService {
                     return businessRepository.findBusinessByMerchantId(user.getMerchantId())
                             .flatMap(business -> {
                                 business.setBusinessName(request.getBusinessName());
-                                business.setBusinessEmail(request.getBusinessEmail());
+//                                business.setBusinessEmail(request.getBusinessEmail());
                                 business.setBusinessAddress(request.getBusinessAddress());
                                 business.setBusinessPhoneNumber(request.getBusinessPhoneNumber());
                                 business.setCountry(request.getCountry());
@@ -162,13 +162,49 @@ public class BusinessService implements IBusinessService {
 
                             })
                             .switchIfEmpty(Mono.defer(() -> {
-                                log.error("business does not exist for merchant {}",user.getFirstName());
-                                return Mono.just(Response.<Business>builder()
-                                        .status(HttpStatus.NOT_FOUND)
-                                        .statusCode(HttpStatus.NOT_FOUND.value())
-                                        .message(FAILED)
-                                        .errors(List.of("Business not found to update"))
-                                        .build());
+                                Business business = Business.builder()
+                                        .businessEmail(request.getBusinessEmail())
+                                        .businessAddress(request.getBusinessAddress())
+                                        .businessName(request.getBusinessName())
+                                        .businessPhoneNumber(request.getBusinessPhoneNumber())
+                                        .businessSupportPhoneNumber(request.getBusinessSupportPhoneNumber())
+                                        .chargeBackEmail(request.getChargeBackEmail())
+                                        .country(request.getCountry())
+                                        .businessSupportEmailAddress(request.getBusinessSupportEmailAddress())
+                                        .customerPayTransactionFee(request.isCustomerPayTransactionFee())
+                                        .merchantId(user.getMerchantId())
+                                        .emailNotification(request.isEmailNotification())
+                                        .customerNotification(request.isCustomerNotification())
+                                        .creditNotifications(request.isCreditNotifications())
+                                        .notifyOnlyBusinessEmail(request.isNotifyOnlyBusinessEmail())
+                                        .notifyDashboardUsers(request.isNotifyDashboardUsers())
+                                        .sendToSpecificUsers(request.getSendToSpecificUsers())
+                                        .twoFAlogin(request.isTwoFAlogin())
+                                        .twoFAForTransfer(request.isTwoFAForTransfer())
+                                        .transfersViaAPI(request.isTransfersViaAPI())
+                                        .transfersViaDashboard(request.isTransfersViaDashboard())
+                                        .disableAllTransfers(request.isDisableAllTransfers())
+                                        .paymentMethod(request.getPaymentMethod())
+                                        .uuid(UUID.randomUUID().toString()).build();
+
+                                return businessRepository.save(business)
+                                        .flatMap(business1 -> {
+                                            log.info("business successfully registered");
+                                            return Mono.just(Response.<Business>builder()
+                                                    .data(business1)
+                                                    .message(SUCCESSFUL)
+                                                    .statusCode(HttpStatus.CREATED.value())
+                                                    .status(HttpStatus.CREATED)
+                                                    .build());
+                                        }).doOnError(throwable -> {
+                                            log.error("error saving business, error is {}",throwable.getLocalizedMessage());
+                                            throw new CustomException(Response.<Business>builder()
+                                                    .message(FAILED)
+                                                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                                                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                                    .errors(List.of("error saving business",throwable.getLocalizedMessage(),throwable.getMessage()))
+                                                    .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+                                        });
                             }));
                 })
                 .switchIfEmpty(Mono.defer(() -> {

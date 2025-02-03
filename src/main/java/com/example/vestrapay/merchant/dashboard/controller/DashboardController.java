@@ -56,9 +56,9 @@ public class DashboardController {
                 .map(mapResponse -> ResponseEntity.status(mapResponse.getStatus()).body(mapResponse));
     }
 
-    @GetMapping("balance")
-    public Mono<ResponseEntity<Response<Balance>>> getBalances(){
-        return transactionService.getUnSettledTransactions()
+    @GetMapping("balance/{currency}")
+    public Mono<ResponseEntity<Response<Balance>>> getBalances(@PathVariable("currency")String currency){
+        return transactionService.  getUnSettledTransactions(currency)
                 .map(balanceResponse -> ResponseEntity.status(balanceResponse.getStatus()).body(balanceResponse));
     }
 

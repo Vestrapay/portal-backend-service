@@ -33,4 +33,10 @@
     <include file="changelog/029_update_transactions_table.sql" relativeToChangelogFile="true"/>
     <include file="changelog/030_create_charge_table.sql" relativeToChangelogFile="true"/>
     <include file="changelog/031_update_notification_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/032_update_paymentlink_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/032_update_routing_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/032_update_charge_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/034_create_wallet_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/035_alter_routing_table.sql" relativeToChangelogFile="true"/>
+    <include file="changelog/038_update_paymentlink_table.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

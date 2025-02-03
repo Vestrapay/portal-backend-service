@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -61,10 +62,25 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public Mono<Response<List<Transaction>>> getTransactionsByParam(Map<String, Object> request) {
+        Transaction.TransactionBuilder builder = Transaction.builder();
+        if (request.containsKey("transactionReference"))
+            builder.transactionReference(request.get("transactionReference").toString());
+
+        if (request.containsKey("status"))
+            builder.transactionStatus(Status.valueOf(request.get("status").toString().toUpperCase()));
+
+        if (request.containsKey("paymentType"))
+            builder.paymentType(PaymentTypeEnum.valueOf(request.get("paymentType").toString().toUpperCase()));
+
+        if (request.containsKey("currency"))
+            builder.currency(request.get("currency").toString().toUpperCase());
+
+
+
         return authenticationService.getLoggedInUser()
                 .flatMap(user -> {
                     if (user.getUserType().equals(UserType.ADMIN)||user.getUserType().equals(UserType.SUPER_ADMIN)){
-                        return transactionRepository.findAllTransactions()
+                        return transactionRepository.findAll(Example.of(builder.build()), Sort.by(Sort.Direction.DESC, "created_at"))
                                 .collectList()
                                 .flatMap(transactions -> {
                                     return Mono.just(Response.<List<Transaction>>builder()
@@ -76,7 +92,8 @@ public class TransactionService implements ITransactionService {
                                 });
                     }
                     else {
-                        return transactionRepository.findByMerchantId(user.getMerchantId())
+                        builder.merchantId(user.getMerchantId());
+                        return transactionRepository.findAll(Example.of(builder.build()),Sort.by(Sort.Direction.DESC, "created_at"))
                                 .collectList()
                                 .flatMap(transactions -> {
                                     return Mono.just(Response.<List<Transaction>>builder()
@@ -205,7 +222,6 @@ public class TransactionService implements ITransactionService {
 
     @Override
     public Mono<Response<List<Transaction>>> getDailyTransactions() {
-        log.info("about fetching daily transactions");
         return authenticationService.getLoggedInUser()
                 .flatMap(user -> {
                     LocalDateTime currentDateTime = LocalDateTime.now();
@@ -376,11 +392,11 @@ public class TransactionService implements ITransactionService {
     }
 
     @Override
-    public Mono<Response<Balance>> getUnSettledTransactions() {
+    public Mono<Response<Balance>> getUnSettledTransactions(String currency) {
         return authenticationService.getLoggedInUser()
                 .flatMap(user -> {
                     if (user.getUserType().equals(UserType.ADMIN) || user.getUserType().equals(UserType.SUPER_ADMIN)){
-                        return transactionRepository.findAllByTransactionStatusAndSettlementStatus(Status.SUCCESSFUL,Status.PENDING)
+                        return transactionRepository.findAllByTransactionStatusAndSettlementStatusAndCurrency(Status.SUCCESSFUL,Status.PENDING,currency)
                                 .collectList()
                                 .flatMap(transactionList -> {
                                     BigDecimal pendingSettlement = transactionList.stream().map(transaction -> {
@@ -391,7 +407,7 @@ public class TransactionService implements ITransactionService {
                                             return BigDecimal.ZERO;
                                         }
                                     }).toList().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-                                    return transactionRepository.findAllByTransactionStatusAndSettlementStatus(Status.SUCCESSFUL,Status.SUCCESSFUL)
+                                    return transactionRepository.findAllByTransactionStatusAndSettlementStatusAndCurrency(Status.SUCCESSFUL,Status.SUCCESSFUL,currency)
                                             .collectList()
                                             .flatMap(transactions -> {
                                                 BigDecimal settledAmount = transactions.stream().map(transaction -> {
@@ -419,7 +435,7 @@ public class TransactionService implements ITransactionService {
                                 });
                     }
                     else {
-                        return transactionRepository.findAllByMerchantIdAndTransactionStatusAndSettlementStatus(user.getMerchantId(), Status.SUCCESSFUL,Status.PENDING)
+                        return transactionRepository.findAllByMerchantIdAndTransactionStatusAndSettlementStatusAndCurrency(user.getMerchantId(), Status.SUCCESSFUL,Status.PENDING,currency)
                                 .collectList()
                                 .flatMap(transactionList -> {
                                     BigDecimal currentBalance = transactionList.stream().map(transaction -> {

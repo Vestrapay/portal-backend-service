@@ -4,9 +4,6 @@ import com.example.vestrapay.merchant.transactions.dtos.TransactionRangeDTO;
 import com.example.vestrapay.merchant.transactions.interfaces.ITransactionService;
 import com.example.vestrapay.merchant.transactions.models.Transaction;
 import com.example.vestrapay.utils.dtos.Response;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 

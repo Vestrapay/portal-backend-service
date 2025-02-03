@@ -232,7 +232,7 @@ public class PaymentService implements IPaymentMethodInterface {
 
     @Override
     public Mono<Response<Object>> configureRoute(RouteRuleDTO request) {
-        return routingRuleRepository.findByPaymentMethod(request.getPaymentMethod())
+        return routingRuleRepository.findByPaymentMethodAndCurrency(request.getPaymentMethod(),request.getCurrency())
                 .flatMap(routingRule -> {
                     return Mono.just(Response.builder()
                                     .message(FAILED)
@@ -255,6 +255,7 @@ public class PaymentService implements IPaymentMethodInterface {
                                             return routingRuleRepository.save(RoutingRule.builder()
                                                             .uuid(UUID.randomUUID().toString())
                                                             .paymentMethod(request.getPaymentMethod())
+                                                            .currency(request.getCurrency())
                                                             .provider(request.getProvider())
                                                             .build())
                                                     .flatMap(routingRule -> {
@@ -307,7 +308,7 @@ public class PaymentService implements IPaymentMethodInterface {
 
     @Override
     public Mono<Response<Object>> updateRoute(RouteRuleDTO request) {
-        return routingRuleRepository.findByPaymentMethod(request.getPaymentMethod())
+        return routingRuleRepository.findByPaymentMethodAndCurrency(request.getPaymentMethod(),request.getCurrency())
                 .flatMap(routingRule -> {
                     return paymentMethodRepository.findAll().collectList().flatMap(paymentMethods -> {
                         List<String> collect = paymentMethods.stream().map(PaymentMethods::getName).toList();

@@ -11,4 +11,5 @@ import lombok.*;
 public class RouteRuleDTO {
     private String paymentMethod;
     private String provider;
+    private String currency;
 }

@@ -27,5 +27,5 @@ public interface ITransactionService {
     Mono<Response<Transaction>> getByUuid(String uuid);
 
 
-    Mono<Response<Balance>> getUnSettledTransactions();
+    Mono<Response<Balance>> getUnSettledTransactions(String currency);
 }

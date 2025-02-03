@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,13 +29,17 @@ public class WebhookService {
                     log.info("merchant user gotten to create webhook");
                     return webhookRepository.findByMerchantId(user.getMerchantId())
                             .flatMap(webhook -> {
-                                log.error("webhook already exist for merchant");
-                                return Mono.just(Response.<Webhook>builder()
+                                log.error("webhook already exist for merchant. updating webhook");
+                                webhook.setDateUpdated(LocalDateTime.now());
+                                webhook.setUrl(url.getUrl());
+                                webhook.setSecretHash(url.getSecretHash());
+                                return webhookRepository.save(webhook)
+                                        .flatMap(webhook1 -> Mono.just(Response.<Webhook>builder()
                                                 .message("SUCCESSFUL")
                                                 .data(webhook)
                                                 .statusCode(HttpStatus.OK.value())
                                                 .status(HttpStatus.OK)
-                                        .build());
+                                                .build()));
                             }).switchIfEmpty(Mono.defer(() -> {
                                 return webhookRepository.save(Webhook.builder()
                                                 .uuid(UUID.randomUUID().toString())

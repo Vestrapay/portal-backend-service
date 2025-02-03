@@ -26,13 +26,11 @@ public class DashboardNotificationService {
 
 
     public Mono<Response<List<Notification>>> getTop10Notification(){
-        log.info("about fetching top 10 notification");
         return authenticationService.getLoggedInUser()
                 .flatMap(user -> {
                     if (user.getUserType().equals(UserType.SUPER_ADMIN)){
                         return notificationRepository.findTopTen().collectList()
                                 .flatMap(notifications -> {
-                                    log.info("top to notifications gotten");
                                     return Mono.just(Response.<List<Notification>>builder()
                                             .data(notifications)
                                             .message(SUCCESSFUL)
@@ -53,7 +51,6 @@ public class DashboardNotificationService {
                     else {
                         return notificationRepository.findTopTenByMerchantId(user.getMerchantId()).collectList()
                                 .flatMap(notifications -> {
-                                    log.info("top to notifications gotten");
                                     return Mono.just(Response.<List<Notification>>builder()
                                             .data(notifications)
                                             .message(SUCCESSFUL)

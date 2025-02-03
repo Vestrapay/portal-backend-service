@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static com.example.vestrapay.utils.PasswordUtil.isValidPassword;
 import static com.example.vestrapay.utils.dtos.Constants.FAILED;
 import static com.example.vestrapay.utils.dtos.Constants.SUCCESSFUL;
 
@@ -139,7 +140,6 @@ public class AuthenticationService implements IAuthenticationService {
 
     @Override
     public Mono<Response<LoginResponseDTO>> login(FirstLoginDTO request) {
-        log.info("about validating user to generate login token");
         return userRepository.findUserByEmail(request.getEmail())
                 .flatMap(user -> {
                     if (!user.isEnabled()){
@@ -407,6 +407,27 @@ public class AuthenticationService implements IAuthenticationService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return userRepository.findUserByEmail(authentication.getName())
                 .flatMap(user -> {
+                    boolean matches = passwordEncoder.matches(request.getOldPassword(), user.getPassword());
+                    if (!matches){
+                        return Mono.just(Response.<Boolean>builder()
+                                .message(FAILED)
+                                .status(HttpStatus.CONFLICT)
+                                .statusCode(HttpStatus.CONFLICT.value())
+                                        .errors(List.of("Old Password Mismatch"))
+                                .data(Boolean.FALSE)
+                                .build());
+                    }
+
+                    boolean validPassword = isValidPassword(request.getNewPassword());
+                    if (!validPassword)
+                        return Mono.just(Response.<Boolean>builder()
+                                .message(FAILED)
+                                .status(HttpStatus.BAD_REQUEST)
+                                .statusCode(HttpStatus.BAD_REQUEST.value())
+                                .errors(List.of("Password strength check failed"))
+                                .data(Boolean.FALSE)
+                                .build());
+
                     String password = passwordEncoder.encode(request.getNewPassword());
                     user.setPassword(password);
                     return userRepository.save(user)
@@ -569,7 +590,5 @@ public class AuthenticationService implements IAuthenticationService {
                 }).subscribe();
 
     }
-
-
 
 }

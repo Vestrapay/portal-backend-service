@@ -1,6 +1,7 @@
 package com.example.vestrapay.merchant.users.interfaces;
 
 import com.example.vestrapay.merchant.users.dtos.UpdateMerchantUserDTO;
+import com.example.vestrapay.merchant.users.dtos.UserUpdateDTO;
 import com.example.vestrapay.superadmin.users.dto.AdminUserDTO;
 import com.example.vestrapay.merchant.users.dtos.MerchantUserDTO;
 import com.example.vestrapay.merchant.users.dtos.UserDTO;
@@ -17,7 +18,7 @@ public interface IUserService {
     Mono<Response<User>> updateMerchantUsers(String merchantId, UpdateMerchantUserDTO request);
     Mono<Response<Void>> deleteMerchantUsers(String merchantId, String userId);
     Mono<Response<List<User>>> merchantViewAllUsers();
-    Mono<Response<User>> updateUser(UserDTO request);
+    Mono<Response<User>> updateUser(UserUpdateDTO request);
     Mono<Response<User>> viewUser();
 
     Mono<Response<Void>> deleteUser(String userId);

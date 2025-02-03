@@ -1,4 +1,4 @@
-package com.example.vestrapay.merchant.settlements.models;
+package com.example.vestrapay.merchant.wallet.model;
 
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -7,6 +7,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -14,29 +15,24 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-@Table("settlement")
+@Table("wallet")
 @Builder
-public class Settlement {
+public class Wallet {
     @Id
     @Column("id")
     private Long id;
-    private String uuid;
-    private String country;
-    @Column("merchant_id")
-    private String merchantId;
+    @Column("wallet_id")
+    private Long walletId;
+    @Column("balance")
+    private BigDecimal balance;
+    @Column("previous_transaction_id")
+    private String previousTransactionId;
     @Column("currency")
     private String currency;
-    @Column("bank_name")
-    private String bankName;
-    @Column("account_number")
-    private String accountNumber;
-    @Column("primary_account")
-    private boolean primaryAccount;
     @Column("created_at")
     @CreatedDate
     private LocalDateTime createdAt;
     @Column("updated_at")
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
 }
