@@ -28,7 +28,7 @@ phases:
       - printenv
       - mvn clean install -DskipTests
       - ls
-      - docker build -t vestrapay-backend -f DockerFile --build-arg IMAGE_TAG=$IMAGE_TAG .
+      - docker build -t vestrapay-backend -f Dockerfile --build-arg IMAGE_TAG=$IMAGE_TAG .
 #      - docker build -t vestrapay-backend
       - docker images -a
       - echo Building the Docker image...
